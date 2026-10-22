@@ -1,0 +1,16 @@
+# Data (keep folder structure only)
+data/**
+!data/raw/
+!data/processed/
+!data/**/.gitkeep
+
+# Environments
+.venv/
+venv/
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
