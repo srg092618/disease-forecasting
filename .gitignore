@@ -1,0 +1,6 @@
+# raw and processed data are re-created by `python -m epicast ingest` and `clean`
+data/
+__pycache__/
+.pytest_cache/
+*.egg-info/
+.venv/

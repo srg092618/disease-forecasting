@@ -1,0 +1,28 @@
+{
+  "generated_at": "2026-11-17T05:34:32+00:00",
+  "source": "mirror",
+  "wdi_mirror_commit": "1bd7fac42b3d5012353607bf2464a485557fd049",
+  "bvd_linelist_commit": "4bc4b57",
+  "python": "3.13.18",
+  "packages": {
+    "numpy": "2.5.3",
+    "pandas": "3.0.5",
+    "scipy": "1.18.1",
+    "statsmodels": "0.15.0",
+    "sklearn": "1.9.1",
+    "requests": "2.34.2",
+    "shapely": "2.2.0"
+  },
+  "random_seed": 20261116,
+  "quantiles": [
+    0.025,
+    0.05,
+    0.1,
+    0.25,
+    0.5,
+    0.75,
+    0.9,
+    0.95,
+    0.975
+  ]
+}

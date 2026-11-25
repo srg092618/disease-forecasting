@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Disease forecasting: malaria, HIV and Ebola disease</title>
+<style>
+.viz-root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10);
+  --observed: #2a78d6; --forecast: #eb6834; --wash: rgba(11,11,11,0.04);
+  --malaria: #2a78d6; --hiv: #eb6834; --ebola: #1baf7a; --land: #efeee9;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .viz-root {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --observed: #3987e5; --forecast: #d95926; --wash: rgba(255,255,255,0.05);
+    --malaria: #3987e5; --hiv: #d95926; --ebola: #199e70; --land: #262624;
+  }
+}
+:root[data-theme="dark"] .viz-root {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+  --observed: #3987e5; --forecast: #d95926; --wash: rgba(255,255,255,0.05);
+    --malaria: #3987e5; --hiv: #d95926; --ebola: #199e70; --land: #262624;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body.viz-root { background: var(--page); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 24px 20px 56px; }
+h1 { font-size: 24px; font-weight: 650; margin: 0 0 2px; letter-spacing: -0.01em; }
+h2 { font-size: 16px; font-weight: 600; margin: 0 0 2px; }
+p { margin: 0 0 10px; }
+.sub, .note { color: var(--ink2); }
+.note { font-size: 13px; margin-bottom: 8px; }
+nav { display: flex; gap: 4px; margin: 18px 0 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+nav button { font: inherit; color: var(--ink2); background: none; border: 0; padding: 8px 12px; cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px; }
+nav button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); font-weight: 600; }
+nav button:hover { color: var(--ink); }
+section[hidden] { display: none; }
+.filters { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: end; margin-bottom: 16px; }
+.filters label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--ink2); }
+select, input[type=range] { font: inherit; color: var(--ink); }
+select { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; min-width: 150px; max-width: 260px; }
+input[type=range] { width: 300px; max-width: 70vw; accent-color: var(--ink2); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.tile, .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+.tile { padding: 12px 14px; }
+.tile .label { font-size: 12px; color: var(--ink2); }
+.tile .value { font-size: 24px; font-weight: 600; line-height: 1.25; }
+.tile .hint { font-size: 12px; color: var(--muted); }
+.card { padding: 16px 16px 12px; margin-bottom: 12px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ink2); margin: 6px 0 4px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.key-line { width: 18px; height: 0; border-top: 2px solid var(--observed); }
+.key-line.fc { border-top-color: var(--forecast); }
+.key-line.later { border-top-color: var(--observed); opacity: 0.45; }
+.key-box { width: 14px; height: 10px; border-radius: 2px; background: var(--forecast); }
+.chart { position: relative; width: 100%; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.axis-text { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.end-label { fill: var(--ink); font-size: 12px; font-weight: 600; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--ink2); font-weight: 600; font-size: 12px; }
+.scroll { overflow-x: auto; }
+.bars { display: grid; grid-template-columns: max-content 1fr; gap: 10px 12px; align-items: center; margin: 12px 0 6px; font-size: 13px; }
+.bars .name { color: var(--ink2); }
+.track { position: relative; height: 20px; }
+.bar { position: absolute; left: 0; top: 3px; height: 14px; background: var(--observed); border-radius: 0 4px 4px 0; }
+.bar:hover { filter: brightness(1.12); }
+.bar-val { position: absolute; top: 0; line-height: 20px; padding-left: 6px; font-variant-numeric: tabular-nums; }
+.ref { position: absolute; top: -4px; bottom: -4px; width: 1px; background: var(--axis); }
+.ref-label { font-size: 11px; color: var(--muted); margin-left: 0; }
+#tooltip { position: fixed; pointer-events: none; z-index: 10; background: var(--surface); color: var(--ink);
+  border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12); display: none; min-width: 150px; }
+#tooltip .t-head { color: var(--ink2); margin-bottom: 4px; }
+#tooltip .t-row { display: flex; justify-content: space-between; gap: 14px; align-items: center; }
+#tooltip .t-row b { font-weight: 600; }
+#tooltip .t-key { display: inline-block; width: 12px; border-top: 2px solid var(--observed); margin-right: 6px; vertical-align: middle; }
+#tooltip .t-key.fc { border-top-color: var(--forecast); }
+#tooltip .t-name { color: var(--ink2); }
+.prose { max-width: 760px; }
+.prose h2 { margin-top: 18px; margin-bottom: 6px; }
+.prose li { margin-bottom: 6px; }
+.callout { background: var(--wash); border-radius: 8px; padding: 10px 12px; font-size: 13px; color: var(--ink2); margin: 0 0 12px; }
+footer { color: var(--muted); font-size: 12px; margin-top: 24px; }
+.map-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+@media (max-width: 860px) { .map-grid { grid-template-columns: 1fr; } }
+.map-wrap { position: relative; }
+#m-svg { display: block; width: 100%; height: auto; touch-action: none; cursor: grab; background: var(--surface); border-radius: 8px; }
+#m-svg.dragging { cursor: grabbing; }
+.zoom { position: absolute; top: 8px; right: 8px; display: flex; flex-direction: column; gap: 4px; }
+.zoom button, .presets button { font: inherit; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; }
+.zoom button { width: 30px; height: 30px; font-size: 16px; line-height: 1; }
+.presets { display: flex; gap: 6px; align-items: end; }
+.presets button { padding: 6px 10px; font-size: 12px; }
+.zoom button:hover, .presets button:hover { background: var(--wash); }
+.checks { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--ink2); margin-bottom: 12px; }
+.checks label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.sw { display: inline-block; width: 11px; height: 11px; }
+.sw.malaria { background: var(--malaria); border-radius: 2px; }
+.sw.hiv { background: var(--hiv); border-radius: 50%; }
+.sw.ebov { background: var(--ebola); border-radius: 50%; }
+.sw.sudv { background: var(--ebola); }
+.sw.bdbv { background: var(--ebola); transform: rotate(45deg) scale(0.85); }
+.country { stroke: var(--axis); stroke-width: 0.6; vector-effect: non-scaling-stroke; }
+.province { fill: none; stroke: var(--axis); stroke-width: 0.5; stroke-opacity: 0.7; vector-effect: non-scaling-stroke; pointer-events: none; }
+.focus-outline { fill: none; stroke: var(--ink); stroke-width: 1.4; vector-effect: non-scaling-stroke; pointer-events: none; }
+.mark { stroke: var(--surface); stroke-width: 1.5; vector-effect: non-scaling-stroke; cursor: pointer; }
+.mark:hover, .mark:focus { stroke: var(--ink); outline: none; }
+.outlook { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin: 8px 0 4px; }
+.ocard { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.ocard .label { font-size: 12px; color: var(--ink2); }
+.ocard .value { font-size: 18px; font-weight: 600; line-height: 1.3; }
+.ocard .hint { font-size: 12px; color: var(--muted); }
+td a, .prose a, .detail a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+td.wrap, th.wrap { white-space: normal; text-align: left; min-width: 230px; vertical-align: top; }
+#m-outbreaks td { vertical-align: top; }
+.detail { font-size: 13px; color: var(--ink2); }
+.detail b { color: var(--ink); }
+.detail ul { margin: 4px 0 0; padding-left: 18px; }
+</style>
+</head>
+<body class="viz-root">
+<div class="wrap">
+  <header>
+    <h1>Disease forecasting</h1>
+    <p class="sub">Malaria, HIV and Ebola disease in Africa: a map of where they are, forecasts with honest uncertainty, and a record of how accurate each model has been.</p>
+  </header>
+
+  <nav role="tablist" aria-label="Views">
+    <button role="tab" data-tab="map" aria-selected="true">Map and outlook</button>
+    <button role="tab" data-tab="forecast" aria-selected="false">Malaria and HIV</button>
+    <button role="tab" data-tab="ebola" aria-selected="false">Outbreak forecasts</button>
+    <button role="tab" data-tab="accuracy" aria-selected="false">Accuracy</button>
+    <button role="tab" data-tab="method" aria-selected="false">How to read this</button>
+  </nav>
+
+  <section id="tab-map">
+    <div class="filters">
+      <label>Focus on <select id="m-focus"></select></label>
+      <label><span id="m-from-label">From</span> <input type="range" id="m-from" step="1" style="width:170px"></label>
+      <label><span id="m-to-label">To</span> <input type="range" id="m-to" step="1" style="width:170px"></label>
+      <div class="presets" id="m-presets"></div>
+    </div>
+    <div class="checks" id="m-checks">
+      <label><input type="checkbox" data-layer="malaria" checked><i class="sw malaria"></i>Malaria (country shading)</label>
+      <label><input type="checkbox" data-layer="hiv" checked><i class="sw hiv"></i>HIV (circle at country centre)</label>
+      <label><input type="checkbox" data-layer="EBOV" checked><i class="sw ebov"></i>Ebola virus</label>
+      <label><input type="checkbox" data-layer="SUDV" checked><i class="sw sudv"></i>Sudan virus</label>
+      <label><input type="checkbox" data-layer="BDBV" checked><i class="sw bdbv"></i>Bundibugyo virus</label>
+      <label><input type="checkbox" id="m-hot" checked>Hotspots (fade low values)</label>
+      <label><input type="checkbox" id="m-nb" checked>Include neighbouring countries</label>
+    </div>
+    <div class="map-grid">
+      <div class="card">
+        <h2 id="m-title"></h2>
+        <p class="note" id="m-sub"></p>
+        <div class="map-wrap">
+          <svg id="m-svg" role="img" aria-label="Map of Africa showing malaria, HIV and Ebola-disease outbreaks"></svg>
+          <div class="zoom"><button id="m-zin" aria-label="Zoom in">+</button><button id="m-zout" aria-label="Zoom out">&minus;</button><button id="m-zreset" aria-label="Reset view" title="Reset view">&#8962;</button></div>
+        </div>
+        <p class="note" style="margin-top:8px">Scroll or use the buttons to zoom, drag to move. Hover for values; click an outbreak marker for its sources. Symbol area is proportional to cases. Outbreak positions are approximate (town, district or province centre).</p>
+        <div class="detail" id="m-detail"></div>
+      </div>
+      <div>
+        <div class="card">
+          <h2>Disease outlook, at a glance</h2>
+          <p class="note" id="m-outlook-note"></p>
+          <div class="outlook" id="m-outlook"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2 id="m-metrics-title">Metrics</h2>
+      <p class="note" id="m-metrics-note"></p>
+      <div class="scroll"><table id="m-metrics"></table></div>
+    </div>
+    <div class="card">
+      <h2>Ebola-disease outbreaks in this view</h2>
+      <p class="note" id="m-ob-note"></p>
+      <div class="scroll"><table id="m-outbreaks"></table></div>
+    </div>
+    <div class="card">
+      <h2>Bundibugyo 2026: where the confirmed cases are</h2>
+      <p class="note" id="m-bvd-note"></p>
+      <div class="scroll"><table id="m-bvd"></table></div>
+    </div>
+  </section>
+
+  <section id="tab-forecast" hidden>
+    <div class="filters">
+      <label>Disease <select id="f-target"></select></label>
+      <label>Country <select id="f-country"></select></label>
+      <label>Model <select id="f-model"></select></label>
+      <label>Forecast made in <select id="f-origin"></select></label>
+    </div>
+    <div class="tiles" id="f-tiles"></div>
+    <div class="card">
+      <h2 id="f-title"></h2>
+      <p class="note" id="f-sub"></p>
+      <div class="legend" id="f-legend"></div>
+      <div class="chart" id="f-chart"></div>
+    </div>
+    <div class="card">
+      <h2>Forecast table</h2>
+      <p class="note" id="f-table-note"></p>
+      <div class="scroll"><table id="f-table"></table></div>
+    </div>
+  </section>
+
+  <section id="tab-ebola" hidden>
+    <p class="callout" id="e-note"></p>
+    <div class="filters">
+      <label>Outbreak <select id="e-set"></select></label>
+      <label>Place <select id="e-country"></select></label>
+      <label>Model <select id="e-model"></select></label>
+      <label><span id="e-origin-label">Forecast made on</span> <input type="range" id="e-origin" min="0" max="1" step="1"></label>
+    </div>
+    <div class="tiles" id="e-tiles"></div>
+    <div class="card">
+      <h2 id="e-title"></h2>
+      <p class="note" id="e-sub"></p>
+      <div class="legend" id="e-legend"></div>
+      <div class="chart" id="e-chart"></div>
+    </div>
+    <div class="card">
+      <h2>Forecast table</h2>
+      <div class="scroll"><table id="e-table"></table></div>
+    </div>
+  </section>
+
+  <section id="tab-accuracy" hidden>
+    <div class="filters">
+      <label>Target <select id="a-target"></select></label>
+      <label>Intervals <select id="a-stage"><option value="calibrated">Calibrated (final)</option><option value="raw">Raw model output</option></select></label>
+    </div>
+    <div class="card">
+      <h2>Forecast error relative to the naive baseline</h2>
+      <p class="note" id="a-note"></p>
+      <div class="bars" id="a-bars"></div>
+    </div>
+    <div class="card">
+      <h2>Scores by model</h2>
+      <p class="note">Coverage is the share of outcomes that fell inside each interval. A well-calibrated 95% interval scores close to 95%.</p>
+      <div class="scroll"><table id="a-table"></table></div>
+    </div>
+    <div class="card">
+      <h2>Relative error by forecast horizon</h2>
+      <p class="note">Same measure as the bars above, split by how far ahead the forecast looked. Below 1.00 beats the naive baseline.</p>
+      <div class="scroll"><table id="a-horizon"></table></div>
+    </div>
+  </section>
+
+  <section id="tab-method" hidden>
+    <div class="prose">
+      <h2>What the chart shows</h2>
+      <ul>
+        <li>The blue line is the published estimate or count. The orange line is the forecast median: the model thinks the outcome is as likely to be above it as below it.</li>
+        <li>The shaded bands are prediction intervals. The widest is the 95% interval. In the backtest, the final intervals contained the outcome close to 95% of the time; the exact figures are on the Accuracy tab.</li>
+        <li>"Forecast made in" lets you replay a past forecast. The model sees only the data up to that year, and the faded line shows what happened next.</li>
+      </ul>
+      <h2>Where the numbers come from</h2>
+      <ul id="m-sources"></ul>
+      <h2>All sources</h2>
+      <ul id="m-allsources"></ul>
+      <h2>Models</h2>
+      <ul>
+        <li><b>Naive</b>: next value equals the last value. The benchmark every other model has to beat.</li>
+        <li><b>Drift, exponential smoothing, ARIMA</b>: classical time-series models fitted to each country separately.</li>
+        <li><b>Global gradient boosting</b>: one machine-learning model trained on all countries at once.</li>
+        <li><b>Renewal equation</b> and <b>Richards curve</b> (outbreaks only): epidemic models built from the reproduction number and from an S-shaped growth curve.</li>
+        <li><b>Recurrence rate</b> (map outlook): how often new outbreaks have started since 2007, turned into the chance of at least one in the next 12 months. It is a base rate, not a prediction of where or when.</li>
+        <li><b>Ensemble</b>: the median of the member models at each quantile. Members are fixed in advance.</li>
+      </ul>
+      <h2>What to keep in mind</h2>
+      <ul>
+        <li>Malaria and HIV figures are themselves model estimates by WHO and UNAIDS, and they are revised every year, including for past years. The backtest scores forecasts against today's version of history, which is easier than forecasting in real time.</li>
+        <li id="m-findings"></li>
+        <li>The Bundibugyo outbreak is a live emergency. Its weekly counts are laboratory confirmations, which lag infections and arrive in batches; the reproduction number assumes the serial interval measured for Ebola virus in West Africa. Treat those forecasts as a modelling exercise and follow WHO and national health authorities for decisions.</li>
+        <li>These are statistical extrapolations. They do not know about funding changes, new vaccines or treatments, conflict, or drug resistance unless those already show in the data.</li>
+        <li>Countries where a disease is nearly eliminated are not forecast: malaria below 1 case per 1,000 at risk, HIV below 1,000 new infections a year (UNAIDS rounds small numbers heavily).</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer id="footer"></footer>
+</div>
+<div id="tooltip" role="status"></div>
+
+<script>
+"use strict";
+const DATA = /*__EPICAST_DATA__*/null;
+const $ = (id) => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+const MODEL_ORDER = ["ensemble", "gbm", "arima", "ets", "drift", "renewal", "richards", "naive"];
+const DEFAULT_COUNTRY = { malaria_incidence: "NGA", hiv_new_infections: "ZAF" };
+
+/* ---------- formatting ---------- */
+function fmt(v, compact) {
+  if (v === null || v === undefined || !isFinite(v)) return "n/a";
+  const a = Math.abs(v);
+  if (a === 0) return "0";
+  if (compact && a >= 1e6) return (v / 1e6).toFixed(a >= 1e7 ? 0 : 1).replace(/\.0$/, "") + "M";
+  if (compact && a >= 1e4) return (v / 1e3).toFixed(a >= 1e5 ? 0 : 1).replace(/\.0$/, "") + "K";
+  if (a >= 100) return Math.round(v).toLocaleString("en-US");
+  if (a >= 10) return v.toFixed(1);
+  if (a >= 1) return v.toFixed(2);
+  return v.toFixed(2);
+}
+function cnt(v) { return (v === null || v === undefined || !isFinite(v)) ? "n/a" : Math.round(v).toLocaleString("en-US"); }
+function pct(v) { return (v === null || v === undefined) ? "n/a" : (v * 100).toFixed(0) + "%"; }
+function el(tag, attrs, text) {
+  const n = document.createElement(tag);
+  if (attrs) for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+function svg(tag, attrs) {
+  const n = document.createElementNS(NS, tag);
+  if (attrs) for (const k in attrs) n.setAttribute(k, attrs[k]);
+  return n;
+}
+function fillSelect(sel, options, value) {
+  sel.replaceChildren(...options.map(o => { const n = el("option", { value: o.value }, o.label); return n; }));
+  if (value !== undefined && options.some(o => o.value === value)) sel.value = value;
+}
+function weekLabel(iso) {
+  const d = new Date(iso + "T00:00:00Z");
+  return d.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+}
+
+/* ---------- tooltip ---------- */
+const tip = $("tooltip");
+function showTip(evt, head, rows) {
+  tip.replaceChildren();
+  tip.appendChild(el("div", { class: "t-head" }, head));
+  for (const r of rows) {
+    const row = el("div", { class: "t-row" });
+    const name = el("span", { class: "t-name" });
+    if (r.key) name.appendChild(el("span", { class: "t-key" + (r.key === "fc" ? " fc" : "") }));
+    name.appendChild(document.createTextNode(r.name));
+    row.appendChild(name);
+    row.appendChild(el("b", null, r.value));
+    tip.appendChild(row);
+  }
+  tip.style.display = "block";
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = evt.clientX + 14, y = evt.clientY + 14;
+  if (x + w > window.innerWidth - 8) x = evt.clientX - w - 14;
+  if (y + h > window.innerHeight - 8) y = evt.clientY - h - 14;
+  tip.style.left = Math.max(8, x) + "px";
+  tip.style.top = Math.max(8, y) + "px";
+}
+function hideTip() { tip.style.display = "none"; }
+
+/* ---------- line chart with forecast fan ---------- */
+function niceTicks(max, count) {
+  if (!(max > 0)) return [0, 1];
+  const raw = max / count, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= raw);
+  const ticks = [];
+  for (let v = 0; v <= max + step * 0.001; v += step) ticks.push(+v.toPrecision(12));
+  if (ticks[ticks.length - 1] < max) ticks.push(+(ticks[ticks.length - 1] + step).toPrecision(12));
+  return ticks;
+}
+/* cfg: { labels, tickLabels(fn), observed[], later[], median[], bands:[{lo[],hi[],opacity}], originIndex, tipLabel(fn), tipBands:[{name,lo[],hi[]}] } */
+function drawChart(host, cfg) {
+  host.replaceChildren();
+  const W = Math.max(host.clientWidth || 720, 320), H = Math.round(Math.min(380, Math.max(260, W * 0.42)));
+  const m = { l: 52, r: 62, t: 14, b: 30 };
+  const n = cfg.labels.length, iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const X = i => m.l + (n > 1 ? i * iw / (n - 1) : iw / 2);
+  const vals = a => (a || []).filter(v => v !== null && v !== undefined && isFinite(v));
+  const core = Math.max(1e-9, ...vals(cfg.observed), ...vals(cfg.later), ...vals(cfg.median));
+  const outer = cfg.bands.length ? Math.max(...vals(cfg.bands[0].hi), core) : core;
+  const yMax = Math.min(outer, core * 2.5) * 1.04;
+  const ticks = niceTicks(yMax, 5), top = ticks[ticks.length - 1];
+  const Y = v => m.t + ih - (Math.min(v, top * 1.5) / top) * ih;
+  const compact = top >= 10000;
+  const root = svg("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": cfg.aria || "Line chart with forecast" });
+  const clipId = "clip-" + host.id;
+  const defs = svg("defs"); const clip = svg("clipPath", { id: clipId });
+  clip.appendChild(svg("rect", { x: m.l, y: m.t - 2, width: iw + 4, height: ih + 2 })); defs.appendChild(clip); root.appendChild(defs);
+
+  for (const t of ticks) {
+    root.appendChild(svg("line", { x1: m.l, x2: m.l + iw, y1: Y(t), y2: Y(t), stroke: t === 0 ? "var(--axis)" : "var(--grid)", "stroke-width": 1 }));
+    const tx = svg("text", { x: m.l - 8, y: Y(t) + 4, "text-anchor": "end", class: "axis-text" }); tx.textContent = fmt(t, compact); root.appendChild(tx);
+  }
+  const stride = Math.max(1, Math.ceil(n / Math.max(4, Math.floor(iw / 78))));
+  for (let i = 0; i < n; i++) {
+    if ((n - 1 - i) % stride !== 0) continue;
+    const tx = svg("text", { x: X(i), y: H - 9, "text-anchor": "middle", class: "axis-text" }); tx.textContent = cfg.tickLabels(i); root.appendChild(tx);
+  }
+  const plot = svg("g", { "clip-path": `url(#${clipId})` }); root.appendChild(plot);
+
+  for (const b of cfg.bands) {
+    const idx = []; for (let i = 0; i < n; i++) if (b.lo[i] !== null && b.lo[i] !== undefined) idx.push(i);
+    if (!idx.length) continue;
+    const up = idx.map(i => `${X(i)},${Y(b.hi[i])}`), down = idx.slice().reverse().map(i => `${X(i)},${Y(b.lo[i])}`);
+    plot.appendChild(svg("polygon", { points: up.concat(down).join(" "), fill: "var(--forecast)", "fill-opacity": b.opacity }));
+  }
+  if (cfg.originIndex !== undefined && cfg.originIndex < n - 1) {
+    plot.appendChild(svg("line", { x1: X(cfg.originIndex), x2: X(cfg.originIndex), y1: m.t, y2: m.t + ih, stroke: "var(--axis)", "stroke-width": 1 }));
+  }
+  const path = (arr) => {
+    let d = "", pen = false;
+    for (let i = 0; i < n; i++) {
+      const v = arr[i];
+      if (v === null || v === undefined) { pen = false; continue; }
+      d += (pen ? "L" : "M") + X(i) + "," + Y(v); pen = true;
+    }
+    return d;
+  };
+  if (cfg.later) plot.appendChild(svg("path", { d: path(cfg.later), fill: "none", stroke: "var(--observed)", "stroke-opacity": 0.45, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+  plot.appendChild(svg("path", { d: path(cfg.observed), fill: "none", stroke: "var(--observed)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+  plot.appendChild(svg("path", { d: path(cfg.median), fill: "none", stroke: "var(--forecast)", "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+
+  let last = -1; for (let i = n - 1; i >= 0; i--) if (cfg.median[i] !== null && cfg.median[i] !== undefined) { last = i; break; }
+  if (last >= 0) {
+    root.appendChild(svg("circle", { cx: X(last), cy: Y(cfg.median[last]), r: 4, fill: "var(--forecast)", stroke: "var(--surface)", "stroke-width": 2 }));
+    const tx = svg("text", { x: Math.min(X(last) + 8, W - 2), y: Y(cfg.median[last]) + 4, class: "end-label" });
+    tx.textContent = fmt(cfg.median[last], true);
+    if (X(last) + 8 > W - 44) { tx.setAttribute("x", X(last) - 8); tx.setAttribute("text-anchor", "end"); tx.setAttribute("y", Y(cfg.median[last]) - 8); }
+    root.appendChild(tx);
+  }
+  const hair = svg("line", { y1: m.t, y2: m.t + ih, stroke: "var(--ink2)", "stroke-width": 1, visibility: "hidden" }); root.appendChild(hair);
+  const dotO = svg("circle", { r: 4, fill: "var(--observed)", stroke: "var(--surface)", "stroke-width": 2, visibility: "hidden" }); root.appendChild(dotO);
+  const dotF = svg("circle", { r: 4, fill: "var(--forecast)", stroke: "var(--surface)", "stroke-width": 2, visibility: "hidden" }); root.appendChild(dotF);
+  const hit = svg("rect", { x: m.l - 6, y: m.t, width: iw + 12, height: ih, fill: "transparent" }); root.appendChild(hit);
+  hit.addEventListener("pointermove", (evt) => {
+    const box = root.getBoundingClientRect();
+    const px = (evt.clientX - box.left) * (W / box.width);
+    const i = Math.max(0, Math.min(n - 1, Math.round((px - m.l) / (iw / Math.max(1, n - 1)))));
+    hair.setAttribute("x1", X(i)); hair.setAttribute("x2", X(i)); hair.setAttribute("visibility", "visible");
+    const o = cfg.observed[i] ?? (cfg.later ? cfg.later[i] : null), f = cfg.median[i];
+    const place = (dot, v) => { if (v === null || v === undefined) dot.setAttribute("visibility", "hidden"); else { dot.setAttribute("cx", X(i)); dot.setAttribute("cy", Y(v)); dot.setAttribute("visibility", "visible"); } };
+    place(dotO, o); place(dotF, i === cfg.originIndex ? null : f);
+    const rows = [];
+    if (o !== null && o !== undefined) rows.push({ key: "obs", name: "Observed", value: fmt(o) });
+    if (f !== null && f !== undefined && i !== cfg.originIndex) {
+      rows.push({ key: "fc", name: "Forecast median", value: fmt(f) });
+      for (const b of cfg.tipBands) if (b.lo[i] !== null && b.lo[i] !== undefined) rows.push({ name: b.name, value: fmt(b.lo[i]) + " to " + fmt(b.hi[i]) });
+    }
+    showTip(evt, cfg.tipLabel(i), rows);
+  });
+  hit.addEventListener("pointerleave", () => { hair.setAttribute("visibility", "hidden"); dotO.setAttribute("visibility", "hidden"); dotF.setAttribute("visibility", "hidden"); hideTip(); });
+  host.appendChild(root);
+}
+function legend(host, items) {
+  host.replaceChildren(...items.map(it => {
+    const s = el("span");
+    const k = el("i", { class: it.cls }); if (it.opacity) k.style.opacity = it.opacity;
+    s.appendChild(k); s.appendChild(document.createTextNode(it.label)); return s;
+  }));
+}
+function tiles(host, items) {
+  host.replaceChildren(...items.map(it => {
+    const t = el("div", { class: "tile" });
+    t.appendChild(el("div", { class: "label" }, it.label));
+    t.appendChild(el("div", { class: "value" }, it.value));
+    if (it.hint) t.appendChild(el("div", { class: "hint" }, it.hint));
+    return t;
+  }));
+}
+function table(host, head, rows) {
+  host.replaceChildren();
+  const thead = el("thead"), hr = el("tr"); head.forEach(h => hr.appendChild(el("th", null, h))); thead.appendChild(hr); host.appendChild(thead);
+  const tb = el("tbody");
+  rows.forEach(r => { const tr = el("tr"); r.forEach(c => tr.appendChild(el("td", null, c))); tb.appendChild(tr); });
+  host.appendChild(tb);
+}
+function modelOptions(available) {
+  return MODEL_ORDER.filter(m => available.includes(m)).map(m => ({ value: m, label: DATA.meta.modelLabels[m] || m }));
+}
+/* Build band arrays from a matrix of quantile rows placed after index `origin`. */
+function fanArrays(n, origin, matrix, qs, anchor) {
+  const col = (j) => { const a = new Array(n).fill(null); if (anchor !== null) a[origin] = anchor; matrix.forEach((row, h) => { if (origin + 1 + h < n) a[origin + 1 + h] = row[j]; }); return a; };
+  const qi = (q) => qs.findIndex(v => Math.abs(v - q) < 1e-9);
+  const pairs = [[0.025, 0.975, "95% interval"], [0.10, 0.90, "80% interval"], [0.25, 0.75, "50% interval"]].filter(p => qi(p[0]) >= 0);
+  return { median: col(qi(0.5)), bands: pairs.map(p => ({ name: p[2], lo: col(qi(p[0])), hi: col(qi(p[1])) })) };
+}
+
+/* ---------- tab 1: malaria and HIV ---------- */
+function initForecast() {
+  fillSelect($("f-target"), Object.keys(DATA.annual).map(k => ({ value: k, label: DATA.annual[k].label })));
+  $("f-target").addEventListener("change", () => { syncForecastControls(true); renderForecast(); });
+  $("f-country").addEventListener("change", () => { syncOrigins(); renderForecast(); });
+  $("f-model").addEventListener("change", renderForecast);
+  $("f-origin").addEventListener("change", renderForecast);
+  syncForecastControls(true);
+}
+function syncForecastControls(resetCountry) {
+  const t = DATA.annual[$("f-target").value];
+  const want = resetCountry ? DEFAULT_COUNTRY[$("f-target").value] : $("f-country").value;
+  fillSelect($("f-country"), t.locations.map(l => ({ value: l.id, label: l.name })), want);
+  const first = t.locations[0].id, models = Object.keys(t.final[first]);
+  fillSelect($("f-model"), modelOptions(models), $("f-model").value || "ensemble");
+  syncOrigins();
+}
+function syncOrigins() {
+  const t = DATA.annual[$("f-target").value], c = $("f-country").value;
+  const origins = Object.keys(t.backtest[c] || {}).sort().reverse();
+  const keep = $("f-origin").value;
+  fillSelect($("f-origin"), [{ value: "latest", label: t.lastYear + " (latest)" }].concat(origins.map(o => ({ value: o, label: o + " (replay)" }))), keep);
+}
+function renderForecast() {
+  const key = $("f-target").value, t = DATA.annual[key], c = $("f-country").value, model = $("f-model").value, originSel = $("f-origin").value;
+  const s = t.series[c], name = t.locations.find(l => l.id === c).name, H = t.horizons.length;
+  const replay = originSel !== "latest";
+  const originYear = replay ? +originSel : t.lastYear;
+  const matrix = replay ? (t.backtest[c][originSel] || {})[model] : t.final[c][model];
+  const qs = replay ? DATA.meta.replayQuantiles : DATA.meta.quantiles;
+  const firstYear = s.x[0], lastX = Math.max(t.lastYear, originYear + H);
+  const labels = []; for (let y = firstYear; y <= lastX; y++) labels.push(y);
+  const n = labels.length, oi = originYear - firstYear;
+  const observed = labels.map((y, i) => (i <= oi && s.x.indexOf(y) >= 0) ? s.y[s.x.indexOf(y)] : null);
+  const later = replay ? labels.map((y, i) => (i >= oi && s.x.indexOf(y) >= 0) ? s.y[s.x.indexOf(y)] : null) : null;
+  const fan = matrix ? fanArrays(n, oi, matrix, qs, observed[oi]) : { median: new Array(n).fill(null), bands: [] };
+  const ops = { "95% interval": 0.13, "80% interval": 0.13, "50% interval": 0.16 };
+  drawChart($("f-chart"), {
+    labels, tickLabels: i => String(labels[i]), observed, later, median: fan.median,
+    bands: fan.bands.map(b => ({ lo: b.lo, hi: b.hi, opacity: ops[b.name] })), originIndex: oi,
+    tipLabel: i => String(labels[i]), tipBands: fan.bands.filter(b => b.name !== "80% interval"),
+    aria: `${t.label} in ${name}: observed values and forecast`,
+  });
+  $("f-title").textContent = `${t.label}, ${name}`;
+  $("f-sub").textContent = `${t.unit.charAt(0).toUpperCase() + t.unit.slice(1)}. ${DATA.meta.modelLabels[model]}, forecast made with data to ${originYear}.`;
+  const lg = [{ cls: "key-line", label: replay ? "Observed up to the forecast" : "Observed" }];
+  if (replay) lg.push({ cls: "key-line later", label: "What happened next" });
+  lg.push({ cls: "key-line fc", label: "Forecast median" });
+  fan.bands.slice().reverse().forEach(b => lg.push({ cls: "key-box", label: b.name, opacity: b.name === "50% interval" ? 0.45 : b.name === "80% interval" ? 0.3 : 0.16 }));
+  legend($("f-legend"), lg);
+
+  const lastObs = observed[oi];
+  const qi = q => qs.findIndex(v => Math.abs(v - q) < 1e-9);
+  const tl = [{ label: `Estimate for ${originYear}`, value: fmt(lastObs, true), hint: t.unit }];
+  if (matrix) {
+    const end = matrix[H - 1], med = end[qi(0.5)], change = lastObs > 0 ? (med / lastObs - 1) * 100 : null;
+    tl.push({ label: `Forecast for ${originYear + H} (median)`, value: fmt(med, true), hint: change === null ? "" : `${change >= 0 ? "+" : ""}${change.toFixed(0)}% vs ${originYear}` });
+    tl.push({ label: `95% interval for ${originYear + H}`, value: `${fmt(end[qi(0.025)], true)} to ${fmt(end[qi(0.975)], true)}`, hint: "19 in 20 outcomes expected inside" });
+  }
+  tiles($("f-tiles"), tl);
+
+  const head = ["Year", "Median", "50% interval", "95% interval"].concat(replay ? ["Actual"] : []);
+  const rows = (matrix || []).map((row, h) => {
+    const y = originYear + 1 + h, act = s.x.indexOf(y) >= 0 ? s.y[s.x.indexOf(y)] : null;
+    const r = [String(y), fmt(row[qi(0.5)]), `${fmt(row[qi(0.25)])} to ${fmt(row[qi(0.75)])}`, `${fmt(row[qi(0.025)])} to ${fmt(row[qi(0.975)])}`];
+    if (replay) r.push(act === null ? "not yet published" : fmt(act));
+    return r;
+  });
+  table($("f-table"), head, rows);
+  $("f-table-note").textContent = matrix ? `${t.unit.charAt(0).toUpperCase() + t.unit.slice(1)}.` : "This model has no forecast for this country and year.";
+}
+
+/* ---------- tab: map and outlook ---------- */
+const M = { k: 1, tx: 0, ty: 0, W: 700, H: 730, lon0: -19, lat1: 39, scale: 10, built: false };
+const MS = { focus: "COD", from: 2018, to: 2026, layers: { malaria: true, hiv: true, EBOV: true, SUDV: true, BDBV: true }, hot: true, nb: true };
+const PX = lon => (lon - M.lon0) * M.scale, PY = lat => (M.lat1 - lat) * M.scale;
+const VIRUS_SHAPE = { EBOV: "circle", SUDV: "square", BDBV: "diamond" };
+function ringPath(rings) { return rings.map(r => "M" + r.map(p => PX(p[0]).toFixed(1) + "," + PY(p[1]).toFixed(1)).join("L") + "Z").join(""); }
+function markPath(shape, x, y, r) {
+  if (shape === "square") { const h = r * 0.89; return `M${x - h},${y - h}H${x + h}V${y + h}H${x - h}Z`; }
+  if (shape === "diamond") { const h = r * 1.25; return `M${x},${y - h}L${x + h},${y}L${x},${y + h}L${x - h},${y}Z`; }
+  return `M${x - r},${y}a${r},${r} 0 1,0 ${2 * r},0a${r},${r} 0 1,0 ${-2 * r},0Z`;
+}
+function meanInRange(byYear, from, to) {
+  if (!byYear) return null;
+  let s = 0, n = 0;
+  for (let y = from; y <= to; y++) { const v = byYear[y]; if (v !== undefined && v !== null) { s += v; n++; } }
+  return n ? s / n : null;
+}
+function mapCountry(id) { return DATA.map.countries.find(c => c.id === id); }
+function selectedSet() {
+  if (MS.focus === "ALL") return new Set(DATA.map.countries.map(c => c.id));
+  const c = mapCountry(MS.focus);
+  return new Set([MS.focus].concat(MS.nb ? c.neighbors : []));
+}
+function outbreakInRange(o) { const end = o.endYear === null ? DATA.map.yearMax : o.endYear; return o.startYear <= MS.to && end >= MS.from; }
+function whenText(o) { return o.status === "ongoing" ? `${o.start} to now` : (o.start === o.end ? o.start : `${o.start} to ${o.end}`); }
+
+function initMap() {
+  const mp = DATA.map;
+  fillSelect($("m-focus"), [{ value: "ALL", label: "All of Africa" }].concat(mp.countries.map(c => ({ value: c.id, label: c.name }))), MS.focus);
+  for (const id of ["m-from", "m-to"]) { $(id).min = mp.yearMin; $(id).max = mp.yearMax; }
+  MS.to = mp.yearMax; MS.from = Math.max(mp.yearMin, 2018);
+  $("m-from").value = MS.from; $("m-to").value = MS.to;
+  $("m-focus").addEventListener("change", () => { MS.focus = $("m-focus").value; renderMap(true); });
+  $("m-from").addEventListener("input", () => { MS.from = +$("m-from").value; if (MS.from > MS.to) { MS.to = MS.from; $("m-to").value = MS.to; } renderMap(false); });
+  $("m-to").addEventListener("input", () => { MS.to = +$("m-to").value; if (MS.to < MS.from) { MS.from = MS.to; $("m-from").value = MS.from; } renderMap(false); });
+  const presets = [["All years", mp.yearMin, mp.yearMax], ["2018 to now", 2018, mp.yearMax], [String(mp.yearMax), mp.yearMax, mp.yearMax]];
+  $("m-presets").replaceChildren(...presets.map(p => { const b = el("button", { type: "button" }, p[0]); b.addEventListener("click", () => { MS.from = p[1]; MS.to = p[2]; $("m-from").value = p[1]; $("m-to").value = p[2]; renderMap(false); }); return b; }));
+  document.querySelectorAll("#m-checks input[data-layer]").forEach(cb => cb.addEventListener("change", () => { MS.layers[cb.dataset.layer] = cb.checked; renderMap(false); }));
+  $("m-hot").addEventListener("change", () => { MS.hot = $("m-hot").checked; renderMap(false); });
+  $("m-nb").addEventListener("change", () => { MS.nb = $("m-nb").checked; renderMap(true); });
+
+  const root = $("m-svg"); root.setAttribute("viewBox", `0 0 ${M.W} ${M.H}`);
+  const g = svg("g", { id: "m-root" }); root.appendChild(g);
+  const gC = svg("g", { id: "m-countries" }), gP = svg("g", { id: "m-prov" }), gF = svg("g", { id: "m-focusline" }), gH = svg("g", { id: "m-hiv" }), gK = svg("g", { id: "m-marks" });
+  [gC, gP, gF, gH, gK].forEach(x => g.appendChild(x));
+  for (const c of mp.countries) {
+    const path = svg("path", { d: ringPath(c.rings), class: "country", "data-id": c.id });
+    path.addEventListener("pointermove", evt => {
+      const rows = [];
+      const mv = meanInRange(mp.malaria[c.id], MS.from, MS.to), hv = meanInRange(mp.hiv[c.id], MS.from, MS.to);
+      rows.push({ name: "Malaria per 1,000 at risk", value: mv === null ? "no data" : fmt(mv) });
+      rows.push({ name: "New HIV infections a year", value: hv === null ? "no data" : fmt(hv, true) });
+      const obs = mp.outbreaks.filter(o => o.country === c.id && outbreakInRange(o));
+      rows.push({ name: "Ebola-disease outbreaks", value: String(obs.length) });
+      showTip(evt, `${c.name}, ${MS.from === MS.to ? MS.from : MS.from + " to " + MS.to}`, rows);
+    });
+    path.addEventListener("pointerleave", hideTip);
+    gC.appendChild(path);
+  }
+  // zoom and pan
+  const toSvg = evt => { const b = root.getBoundingClientRect(); return [(evt.clientX - b.left) * M.W / b.width, (evt.clientY - b.top) * M.H / b.height]; };
+  const zoomAt = (x, y, f) => { const k = Math.max(0.8, Math.min(40, M.k * f)); const r = k / M.k; M.tx = x - (x - M.tx) * r; M.ty = y - (y - M.ty) * r; M.k = k; applyMapTransform(); };
+  root.addEventListener("wheel", evt => { evt.preventDefault(); const [x, y] = toSvg(evt); zoomAt(x, y, evt.deltaY < 0 ? 1.25 : 0.8); }, { passive: false });
+  let drag = null;
+  root.addEventListener("pointerdown", evt => { if (evt.target.classList.contains("mark")) return; drag = { p: toSvg(evt), tx: M.tx, ty: M.ty }; root.classList.add("dragging"); root.setPointerCapture(evt.pointerId); });
+  root.addEventListener("pointermove", evt => { if (!drag) return; const p = toSvg(evt); M.tx = drag.tx + p[0] - drag.p[0]; M.ty = drag.ty + p[1] - drag.p[1]; applyMapTransform(); hideTip(); });
+  const endDrag = () => { drag = null; root.classList.remove("dragging"); };
+  root.addEventListener("pointerup", endDrag); root.addEventListener("pointercancel", endDrag);
+  $("m-zin").addEventListener("click", () => zoomAt(M.W / 2, M.H / 2, 1.5));
+  $("m-zout").addEventListener("click", () => zoomAt(M.W / 2, M.H / 2, 1 / 1.5));
+  $("m-zreset").addEventListener("click", () => fitMap());
+  M.built = true;
+}
+function applyMapTransform() {
+  $("m-root").setAttribute("transform", `translate(${M.tx.toFixed(2)},${M.ty.toFixed(2)}) scale(${M.k.toFixed(4)})`);
+  document.querySelectorAll("#m-marks path, #m-hiv path").forEach(n => n.setAttribute("d", markPath(n.dataset.shape, +n.dataset.x, +n.dataset.y, +n.dataset.r / M.k)));
+}
+function fitMap() {
+  let box = [-18, -35, 52, 38];
+  if (MS.focus !== "ALL") {
+    const ids = [...selectedSet()]; box = [999, 999, -999, -999];
+    for (const id of ids) { const b = mapCountry(id).bbox; box = [Math.min(box[0], b[0]), Math.min(box[1], b[1]), Math.max(box[2], b[2]), Math.max(box[3], b[3])]; }
+  }
+  const x0 = PX(box[0]), x1 = PX(box[2]), y0 = PY(box[3]), y1 = PY(box[1]);
+  M.k = Math.min(M.W / (x1 - x0), M.H / (y1 - y0)) * 0.92;
+  M.tx = M.W / 2 - M.k * (x0 + x1) / 2; M.ty = M.H / 2 - M.k * (y0 + y1) / 2;
+  applyMapTransform();
+}
+function addMark(layer, shape, lon, lat, r, opacity, color, tipHead, tipRows, onClick, label) {
+  const n = svg("path", { class: "mark", fill: color, "fill-opacity": opacity, tabindex: "0", role: "button", "aria-label": label });
+  n.dataset.shape = shape; n.dataset.x = PX(lon); n.dataset.y = PY(lat); n.dataset.r = r;
+  n.setAttribute("d", markPath(shape, PX(lon), PY(lat), r / M.k));
+  n.addEventListener("pointermove", evt => { evt.stopPropagation(); showTip(evt, tipHead, tipRows); });
+  n.addEventListener("pointerleave", hideTip);
+  if (onClick) { n.addEventListener("click", onClick); n.addEventListener("keydown", evt => { if (evt.key === "Enter" || evt.key === " ") { evt.preventDefault(); onClick(); } }); }
+  layer.appendChild(n);
+}
+function sourceLinks(host, sources) {
+  sources.forEach((sc, i) => { if (i) host.appendChild(document.createTextNode("; ")); const a = el("a", { href: sc.url, target: "_blank", rel: "noopener noreferrer" }, sc.publisher || sc.title); a.title = sc.title; host.appendChild(a); });
+}
+function showOutbreakDetail(o) {
+  const d = $("m-detail"); d.replaceChildren();
+  const head = el("p"); head.appendChild(el("b", null, `${o.virusLabel}: ${o.place}, ${o.countryName}`)); d.appendChild(head);
+  const cfr = (o.cases && o.deaths !== null) ? ` (${Math.round(o.deaths / o.cases * 100)}% of cases)` : "";
+  d.appendChild(el("p", null, `${whenText(o)}. ${o.cases === null ? "Cases not reported" : o.cases.toLocaleString("en-US") + " cases"}, ${o.deaths === null ? "deaths not reported" : o.deaths.toLocaleString("en-US") + " deaths" + cfr}.` + (o.caseNote ? ` ${o.caseNote}.` : "") + (o.notes ? ` ${o.notes}.` : "") + ` Map position: ${o.precision}.`));
+  d.appendChild(el("p", null, "Sources:"));
+  const ul = el("ul"); o.sources.forEach(sc => { const li = el("li"); const a = el("a", { href: sc.url, target: "_blank", rel: "noopener noreferrer" }, sc.title); li.appendChild(a); li.appendChild(document.createTextNode(` (${sc.publisher})`)); ul.appendChild(li); }); d.appendChild(ul);
+}
+function renderMap(refit) {
+  const mp = DATA.map, sel = selectedSet(), focusName = MS.focus === "ALL" ? "Africa" : mapCountry(MS.focus).name;
+  $("m-from-label").textContent = "From " + MS.from; $("m-to-label").textContent = "To " + MS.to;
+  const range = MS.from === MS.to ? String(MS.from) : `${MS.from} to ${MS.to}`;
+  const mal = {}, hiv = {}; let malMax = 0, hivMax = 0;
+  for (const c of mp.countries) {
+    mal[c.id] = meanInRange(mp.malaria[c.id], MS.from, MS.to); hiv[c.id] = meanInRange(mp.hiv[c.id], MS.from, MS.to);
+    if (mal[c.id] !== null) malMax = Math.max(malMax, mal[c.id]); if (hiv[c.id] !== null) hivMax = Math.max(hivMax, hiv[c.id]);
+  }
+  document.querySelectorAll("#m-countries path").forEach(p => {
+    const id = p.dataset.id, v = mal[id];
+    if (MS.layers.malaria && v !== null && v > 0) { p.setAttribute("fill", "var(--malaria)"); p.setAttribute("fill-opacity", MS.hot ? (0.05 + 0.5 * Math.pow(v / malMax, 0.8)).toFixed(3) : (v >= 1 ? 0.3 : 0.06)); }
+    else { p.setAttribute("fill", "var(--land)"); p.setAttribute("fill-opacity", 1); }
+    p.style.opacity = sel.has(id) ? 1 : 0.3;
+  });
+  const gP = $("m-prov"); gP.replaceChildren(); const gF = $("m-focusline"); gF.replaceChildren();
+  if (MS.focus !== "ALL") {
+    (mp.provinces[MS.focus] || []).forEach(pr => gP.appendChild(svg("path", { d: ringPath(pr.rings), class: "province" })));
+    gF.appendChild(svg("path", { d: ringPath(mapCountry(MS.focus).rings), class: "focus-outline" }));
+  }
+  if (refit) fitMap();
+  const gH = $("m-hiv"); gH.replaceChildren();
+  if (MS.layers.hiv) mp.countries.filter(c => sel.has(c.id) && hiv[c.id] !== null).sort((a, b) => hiv[b.id] - hiv[a.id]).forEach(c => {
+    const v = hiv[c.id], r = 3 + 23 * Math.sqrt(v / hivMax);
+    addMark(gH, "circle", c.centroid[0], c.centroid[1], r, MS.hot ? (0.4 + 0.5 * Math.sqrt(v / hivMax)).toFixed(3) : 0.7, "var(--hiv)", `${c.name}, ${range}`, [{ name: "New HIV infections a year", value: fmt(v, true) }], null, `${c.name}: ${fmt(v, true)} new HIV infections a year`);
+  });
+  const gK = $("m-marks"); gK.replaceChildren();
+  const showBvdDetail = MS.layers.BDBV && MS.to >= 2026 && MS.from <= 2026;
+  const shown = mp.outbreaks.filter(o => MS.layers[o.virus] && outbreakInRange(o));
+  const marks = [];
+  shown.forEach(o => { if (o.id === "cod-2026-ituri" && showBvdDetail) return; marks.push({ shape: VIRUS_SHAPE[o.virus], lon: o.lon, lat: o.lat, cases: o.cases || 1, head: `${o.virusLabel}: ${o.place}`, rows: [{ name: "When", value: whenText(o) }, { name: "Cases", value: o.cases === null ? "n/a" : o.cases.toLocaleString("en-US") }, { name: "Deaths", value: o.deaths === null ? "n/a" : o.deaths.toLocaleString("en-US") }], click: () => showOutbreakDetail(o), country: o.country, near: o.near }); });
+  if (showBvdDetail) { const o = mp.outbreaks.find(x => x.id === "cod-2026-ituri"); mp.bvd.points.forEach(pt => marks.push({ shape: "diamond", lon: pt.lon, lat: pt.lat, cases: pt.confirmed, head: `Bundibugyo virus 2026: ${pt.name}`, rows: [{ name: "Confirmed cases", value: pt.confirmed.toLocaleString("en-US") }, { name: "Deaths among them", value: pt.deaths.toLocaleString("en-US") }, { name: "Position", value: pt.precision }], click: () => showOutbreakDetail(o), country: pt.country, near: {} })); }
+  marks.sort((a, b) => b.cases - a.cases).forEach(m => {
+    const r = 4 + 20 * Math.sqrt(Math.min(m.cases, 12000) / 12000);
+    const inView = MS.focus === "ALL" || sel.has(m.country) || (m.near && m.near[MS.focus] !== undefined);
+    addMark(gK, m.shape, m.lon, m.lat, r, (inView ? 1 : 0.35) * (MS.hot ? 0.45 + 0.5 * Math.pow(Math.min(m.cases, 12000) / 12000, 0.35) : 0.85), "var(--ebola)", m.head, m.rows, m.click, m.head);
+  });
+  $("m-title").textContent = `${focusName}${MS.focus !== "ALL" && MS.nb ? " and neighbours" : ""}, ${range}`;
+  $("m-sub").textContent = "Shading: malaria incidence. Orange circles: new HIV infections a year. Green symbols: Ebola-disease outbreaks (circle Ebola virus, square Sudan virus, diamond Bundibugyo virus). Values are averages over the selected years.";
+
+  // metrics table
+  const ids = MS.focus === "ALL" ? mp.countries.map(c => c.id) : [MS.focus].concat(MS.nb ? mapCountry(MS.focus).neighbors : []);
+  let hivSum = 0, obSum = 0, caseSum = 0;
+  const rows = ids.map(id => {
+    const obs = shown.filter(o => o.country === id), cases = obs.reduce((a, o) => a + (o.cases || 0), 0);
+    if (hiv[id] !== null) hivSum += hiv[id]; obSum += obs.length; caseSum += cases;
+    return [mapCountry(id).name, mal[id] === null ? "no data" : fmt(mal[id]), hiv[id] === null ? "no data" : fmt(hiv[id], true), String(obs.length), obs.length ? cases.toLocaleString("en-US") : "0"];
+  }).filter(r => MS.focus !== "ALL" || r[1] !== "no data" || r[2] !== "no data" || r[3] !== "0");
+  rows.push(["Total (where it adds up)", "n/a", fmt(hivSum, true), String(obSum), caseSum.toLocaleString("en-US")]);
+  table($("m-metrics"), ["Country", "Malaria per 1,000 at risk", "New HIV infections a year", "Ebola-disease outbreaks", "Outbreak cases"], rows);
+  $("m-metrics-title").textContent = `Metrics: ${focusName}${MS.focus !== "ALL" && MS.nb ? " and neighbours" : ""}`;
+  $("m-metrics-note").textContent = `Averages over ${range}. Malaria rates cannot be added across countries, so the total row leaves them out. Outbreaks are counted in the country where they were declared.`;
+
+  // outbreak table with source links
+  const list = shown.filter(o => MS.focus === "ALL" || sel.has(o.country) || o.near[MS.focus] !== undefined).sort((a, b) => b.start.localeCompare(a.start));
+  const host = $("m-outbreaks"); host.replaceChildren();
+  const head = ["Virus", "Where", "Country", "When", "Cases", "Deaths"].concat(MS.focus === "ALL" ? [] : ["Distance to border"]).concat(["Sources"]);
+  const thead = el("thead"), hr = el("tr"); head.forEach(h => hr.appendChild(el("th", h === "Where" || h === "Sources" ? { class: "wrap" } : null, h))); thead.appendChild(hr); host.appendChild(thead);
+  const tb = el("tbody");
+  list.forEach(o => {
+    const tr = el("tr");
+    [o.virusLabel, null, o.countryName, whenText(o), o.cases === null ? "n/a" : o.cases.toLocaleString("en-US"), o.deaths === null ? "n/a" : o.deaths.toLocaleString("en-US")].forEach((v, i) => { if (i === 1) tr.appendChild(el("td", { class: "wrap" }, o.place)); else tr.appendChild(el("td", null, v)); });
+    if (MS.focus !== "ALL") tr.appendChild(el("td", null, o.country === MS.focus ? "inside" : (o.near[MS.focus] !== undefined ? `${o.near[MS.focus]} km` : "neighbour")));
+    const td = el("td", { class: "wrap" }); sourceLinks(td, o.sources); tr.appendChild(td); tb.appendChild(tr);
+  });
+  host.appendChild(tb);
+  $("m-ob-note").textContent = list.length ? `${list.length} outbreak${list.length === 1 ? "" : "s"} active in ${range}` + (MS.focus === "ALL" ? "." : `, in ${focusName}, its neighbours, or within ${mp.nearbyKm} km of its border. "Distance to border" is measured from the outbreak's map position to ${focusName}.`) + " Every row links to the reports its numbers come from." : `No registered outbreaks for this selection in ${range}.`;
+  renderOutlook(); renderBvdTable();
+}
+function renderOutlook() {
+  const o = DATA.outlook, cards = [], f = MS.focus;
+  if (f !== "ALL") for (const key of Object.keys(o.annual)) {
+    const a = o.annual[key], c = a.byCountry[f];
+    if (!c) { cards.push({ label: a.label, value: "Not forecast", hint: "No data, or below the level where forecasting is meaningful." }); continue; }
+    cards.push({ label: `${a.label} to ${c.year}`, value: c.direction.charAt(0).toUpperCase() + c.direction.slice(1), hint: `${fmt(c.latest, true)} in ${a.lastYear}; forecast ${fmt(c.median, true)} in ${c.year} (95% interval ${fmt(c.lo95, true)} to ${fmt(c.hi95, true)}). ${DATA.meta.modelLabels[c.model]}, the best-scoring model in the backtest.` });
+  }
+  const drcSide = f === "ALL" || f === "COD" || f === "UGA" || mapCountry("COD").neighbors.includes(f);
+  if (drcSide) o.bvd.filter(b => f === "COD" ? true : b.location === "COD").forEach(b => {
+    const w = b.weeks[b.weeks.length - 1];
+    cards.push({ label: `Bundibugyo 2026, ${b.name}`, value: `${b.trend.charAt(0).toUpperCase() + b.trend.slice(1)} (R ${b.r_mean.toFixed(2)})`, hint: `${cnt(b.latest_week)} confirmed in the week to ${weekLabel(b.as_of)}. Forecast for the week to ${weekLabel(w.week_ending)}: ${cnt(w.median)} (95% interval ${cnt(w.lo95)} to ${cnt(w.hi95)}). R interval ${b.r_lo.toFixed(2)} to ${b.r_hi.toFixed(2)}, counting noise only.` });
+  });
+  const pick = f === "COD" ? [0, 2] : f === "UGA" ? [1, 2] : [0, 1, 2];
+  pick.forEach(i => { const r = o.recurrence[i]; cards.push({ label: `New outbreak: ${r.group}`, value: `${Math.round(r.p_next_12_months * 100)}% chance within 12 months`, hint: `${r.n} outbreaks since ${o.recurrenceSince}, about ${r.rate_per_year.toFixed(2)} a year (90% range ${r.rate_lo.toFixed(2)} to ${r.rate_hi.toFixed(2)}). Typical size ${cnt(r.median_cases)} cases; largest ${cnt(r.largest_cases)}.` + (r.ongoing ? " One is in progress now." : "") }); });
+  $("m-outlook").replaceChildren(...cards.map(c => { const d = el("div", { class: "ocard" }); d.appendChild(el("div", { class: "label" }, c.label)); d.appendChild(el("div", { class: "value" }, c.value)); d.appendChild(el("div", { class: "hint" }, c.hint)); return d; }));
+  $("m-outlook-note").textContent = (f === "ALL" ? "Choose a country to see its malaria and HIV outlook. " : "") + "Direction uses the 80% forecast interval: entirely below today's value is \"likely to fall\", entirely above is \"likely to rise\". Outbreak chances are historical base rates, not predictions of where or when.";
+}
+function renderBvdTable() {
+  const b = DATA.map.bvd, rows = [];
+  b.provinces.forEach(p => rows.push([p.name, "Province, DR Congo", p.confirmed.toLocaleString("en-US"), p.deaths.toLocaleString("en-US")]));
+  b.countries.filter(c => c.name !== "Democratic Republic of the Congo").forEach(c => rows.push([c.name, "Country", c.confirmed.toLocaleString("en-US"), c.deaths.toLocaleString("en-US")]));
+  b.health_zones.forEach(z => rows.push([z.name, "Health zone, DR Congo", z.confirmed.toLocaleString("en-US"), z.deaths.toLocaleString("en-US")]));
+  table($("m-bvd"), ["Place", "Level", "Confirmed cases", "Deaths among them"], rows);
+  $("m-bvd-note").textContent = `${b.confirmed.toLocaleString("en-US")} laboratory-confirmed cases and ${b.deaths_among_confirmed.toLocaleString("en-US")} deaths among them in the Global.health line list, data to ${weekLabel(b.as_of)}. Provinces and other countries are on the map; the ${b.health_zones.length} largest of ${b.n_health_zones} affected health zones are listed here because the project has no coordinates for health zones yet.`;
+}
+
+/* ---------- tab: outbreak forecasts ---------- */
+function curSet() { return DATA.outbreakSets.find(x => x.key === $("e-set").value); }
+function initEbola() {
+  fillSelect($("e-set"), DATA.outbreakSets.map(x => ({ value: x.key, label: x.label })));
+  $("e-set").addEventListener("change", () => { syncEbolaControls(); renderEbola(); });
+  $("e-country").addEventListener("change", () => { syncEbolaSlider(true); renderEbola(); });
+  $("e-model").addEventListener("change", renderEbola);
+  $("e-origin").addEventListener("input", renderEbola);
+  syncEbolaControls();
+}
+function syncEbolaControls() {
+  const e = curSet();
+  fillSelect($("e-country"), e.locations.map(l => ({ value: l.id, label: l.name })), e.key === "ebola_weekly_cases" ? "SLE" : e.locations[0].id);
+  const anyLoc = e.locations[0].id, anyOrigin = Object.keys(e.backtest[anyLoc])[0];
+  fillSelect($("e-model"), modelOptions(Object.keys(e.backtest[anyLoc][anyOrigin])), "ensemble");
+  $("e-note").textContent = e.note;
+  syncEbolaSlider(true);
+}
+function ebolaOrigins() {
+  const e = curSet(), c = $("e-country").value, list = Object.keys(e.backtest[c]).sort().map(o => ({ date: o, live: false }));
+  if (e.ongoing && e.final[c]) { const s = e.series[c]; list.push({ date: s.x[s.x.length - 1], live: true }); }
+  return list;
+}
+function syncEbolaSlider(reset) {
+  const e = curSet(), origins = ebolaOrigins(), sl = $("e-origin");
+  sl.max = origins.length - 1;
+  if (reset) {
+    if (e.ongoing) { sl.value = origins.length - 1; return; }
+    const s = e.series[$("e-country").value], peak = s.x[s.y.indexOf(Math.max(...s.y))];
+    let best = 0; origins.forEach((o, i) => { if (o.date <= peak) best = i; });
+    sl.value = Math.max(0, best - 4);
+  }
+}
+function addWeeks(iso, k) { const d = new Date(iso + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + 7 * k); return d.toISOString().slice(0, 10); }
+function renderEbola() {
+  const e = curSet(), c = $("e-country").value, model = $("e-model").value;
+  const origins = ebolaOrigins(), og = origins[Math.min(+$("e-origin").value, origins.length - 1)], origin = og.date;
+  const s = e.series[c], name = e.locations.find(l => l.id === c).name, H = e.horizons.length;
+  const oi = s.x.indexOf(origin), matrix = og.live ? e.final[c][model] : e.backtest[c][origin][model];
+  const x = s.x.slice(); while (x.length < oi + 1 + H) x.push(addWeeks(x[x.length - 1], 1));
+  const n = x.length, yv = i => (i < s.y.length ? s.y[i] : null);
+  const observed = x.map((_, i) => i <= oi ? yv(i) : null), later = x.map((_, i) => i >= oi ? yv(i) : null);
+  const fan = fanArrays(n, oi, matrix, DATA.meta.replayQuantiles, s.y[oi]);
+  drawChart($("e-chart"), {
+    labels: x, tickLabels: i => { const d = new Date(x[i] + "T00:00:00Z"); return d.toLocaleDateString("en-US", n > 60 ? { month: "short", year: "2-digit", timeZone: "UTC" } : { day: "numeric", month: "short", timeZone: "UTC" }); },
+    observed, later: og.live ? null : later, median: fan.median, bands: fan.bands.map(b => ({ lo: b.lo, hi: b.hi, opacity: b.name === "50% interval" ? 0.18 : 0.14 })),
+    originIndex: oi, tipLabel: i => "Week ending " + weekLabel(x[i]), tipBands: fan.bands,
+    aria: `Weekly cases in ${name} with a four-week forecast`,
+  });
+  $("e-origin-label").textContent = "Forecast made on " + weekLabel(origin) + (og.live ? " (latest data)" : "");
+  $("e-title").textContent = `${name}: ${e.unit}`;
+  $("e-sub").textContent = `${DATA.meta.modelLabels[model]}. Uses only the weeks up to ${weekLabel(origin)}.` + (og.live ? " The outcome is not known yet." : "");
+  const lg = [{ cls: "key-line", label: "Reported up to the forecast" }];
+  if (!og.live) lg.push({ cls: "key-line later", label: "What happened next" });
+  lg.push({ cls: "key-line fc", label: "Forecast median" }, { cls: "key-box", label: "50% interval", opacity: 0.4 }, { cls: "key-box", label: "95% interval", opacity: 0.16 });
+  legend($("e-legend"), lg);
+  const r = e.rt[c][oi], total = s.y.slice(0, oi + 1).reduce((a, b) => a + b, 0);
+  tiles($("e-tiles"), [
+    { label: "Reproduction number R", value: r === null ? "n/a" : r.toFixed(2), hint: r === null ? "" : (r > 1.05 ? "above 1: the outbreak is growing" : r < 0.95 ? "below 1: the outbreak is shrinking" : "about 1: roughly steady") },
+    { label: "Cases in the latest week", value: fmt(s.y[oi], true), hint: "week ending " + weekLabel(origin) },
+    { label: "Cases so far in this series", value: fmt(total, true), hint: "since the series began" },
+  ]);
+  table($("e-table"), ["Week ending", "Median", "50% interval", "95% interval", "Actual"], matrix.map((row, h) => {
+    const j = oi + 1 + h;
+    return [weekLabel(x[j]), fmt(row[2]), `${fmt(row[1])} to ${fmt(row[3])}`, `${fmt(row[0])} to ${fmt(row[4])}`, yv(j) === null ? "not yet known" : fmt(yv(j))];
+  }));
+}
+
+/* ---------- tab 3: accuracy ---------- */
+function initAccuracy() {
+  fillSelect($("a-target"), Object.keys(DATA.targetLabels).map(k => ({ value: k, label: DATA.targetLabels[k] })));
+  $("a-target").addEventListener("change", renderAccuracy);
+  $("a-stage").addEventListener("change", renderAccuracy);
+}
+function renderAccuracy() {
+  const key = $("a-target").value, stage = $("a-stage").value;
+  const rows = DATA.metrics.overall.filter(r => r.target === key && r.stage === stage).sort((a, b) => a.rel_wis_log - b.rel_wis_log);
+  const maxV = Math.max(1.25, ...rows.map(r => r.rel_wis_log)) * 1.08;
+  const bars = $("a-bars"); bars.replaceChildren();
+  rows.forEach(r => {
+    bars.appendChild(el("div", { class: "name" }, DATA.meta.modelLabels[r.model] || r.model));
+    const track = el("div", { class: "track" });
+    const bar = el("div", { class: "bar", tabindex: "0" }); bar.style.width = (r.rel_wis_log / maxV * 100) + "%";
+    const val = el("span", { class: "bar-val" }, r.rel_wis_log.toFixed(2)); val.style.left = (r.rel_wis_log / maxV * 100) + "%";
+    const ref = el("div", { class: "ref" }); ref.style.left = (1 / maxV * 100) + "%";
+    const tipRows = [{ name: "Relative error", value: r.rel_wis_log.toFixed(3) }, { name: "Forecasts scored", value: r.n.toLocaleString("en-US") }];
+    if (r.rel_wis_log_lo !== null && r.rel_wis_log_lo !== undefined) tipRows.splice(1, 0, { name: "95% confidence interval", value: r.rel_wis_log_lo.toFixed(2) + " to " + r.rel_wis_log_hi.toFixed(2) });
+    bar.addEventListener("pointermove", evt => showTip(evt, DATA.meta.modelLabels[r.model] || r.model, tipRows));
+    bar.addEventListener("pointerleave", hideTip);
+    track.appendChild(ref); track.appendChild(bar); track.appendChild(val); bars.appendChild(track);
+  });
+  const n = rows.length ? rows[0].n : 0, best = rows[0];
+  $("a-note").textContent = `Weighted interval score on the log scale, divided by the naive model's score. 1.00 (the vertical line) equals the baseline; lower is better. ${n.toLocaleString("en-US")} forecasts per model, each scored on data the model had not seen.` +
+    (best && best.model === "naive" ? " No model beat the naive baseline on this target." : "");
+  table($("a-table"), ["Model", "Relative error", "95% CI", "MASE", "50% cov.", "80% cov.", "90% cov.", "95% cov."], rows.map(r => [
+    DATA.meta.modelLabels[r.model] || r.model, r.rel_wis_log.toFixed(2),
+    r.model === "naive" ? "baseline" : (r.rel_wis_log_lo === null || r.rel_wis_log_lo === undefined) ? "n/a" : `${r.rel_wis_log_lo.toFixed(2)} to ${r.rel_wis_log_hi.toFixed(2)}`,
+    r.mase.toFixed(2), pct(r.cov50), pct(r.cov80), pct(r.cov90), pct(r.cov95)]));
+  const bh = DATA.metrics.byHorizon.filter(r => r.target === key && r.stage === stage);
+  const hs = [...new Set(bh.map(r => r.horizon))].sort((a, b) => a - b);
+  const unit = key.indexOf("weekly") >= 0 ? "wk" : "yr";
+  table($("a-horizon"), ["Model"].concat(hs.map(h => `${h} ${unit}`)), rows.map(r => [DATA.meta.modelLabels[r.model] || r.model].concat(
+    hs.map(h => { const x = bh.find(q => q.model === r.model && q.horizon === h); return x ? x.rel_wis_log.toFixed(2) : "n/a"; }))));
+}
+
+/* ---------- tab 4 + chrome ---------- */
+function initMethod() {
+  const v = DATA.meta.sourceVersions;
+  const items = [
+    `Malaria: incidence per 1,000 population at risk, WHO Global Health Observatory estimates. Version: ${(v.malaria || []).join(", ")}.`,
+    `HIV: people newly infected per year, UNAIDS estimates. Version: ${(v.hiv || []).join(", ")}.`,
+    `Ebola, West Africa 2014 to 2016: cumulative cases from WHO and Ministry of Health situation reports for Guinea, Liberia and Sierra Leone, converted to weekly new cases.`,
+    `Bundibugyo 2026: case-level line list compiled by Global.health from official situation reports. Version: ${(v.bundibugyo || []).join(", ")}.`,
+    `Outbreak history: a registry of ${DATA.map.outbreaks.length} outbreaks since 2007 compiled from CDC and WHO reports; each row links to its sources on the map tab.`,
+  ];
+  $("m-allsources").replaceChildren(...DATA.meta.allSources.map(sc => { const li = el("li"); li.appendChild(el("a", { href: sc.url, target: "_blank", rel: "noopener noreferrer" }, sc.title)); li.appendChild(document.createTextNode(` (${sc.publisher})`)); return li; }));
+  $("m-sources").replaceChildren(...items.map(t => el("li", null, t)));
+  const best = (key) => DATA.metrics.overall.filter(r => r.target === key && r.stage === "calibrated").sort((a, b) => a.rel_wis_log - b.rel_wis_log)[0];
+  const parts = Object.keys(DATA.targetLabels).map(k => { const b = best(k); return `${DATA.targetLabels[k]}: best model was ${DATA.meta.modelLabels[b.model]}` + (b.model === "naive" ? "" : ` (${Math.round((1 - b.rel_wis_log) * 100)}% lower error than naive)`); });
+  $("m-findings").textContent = "Backtest result. " + parts.join(". ") + ". Where the naive model wins, the honest forecast is \"about the same as the latest value\", with the interval telling you how far it could move.";
+  $("footer").textContent = `Generated ${DATA.meta.generated} by the epicast pipeline. Sources: ${DATA.meta.sources.join("; ")}.`;
+}
+function showTab(name) {
+  document.querySelectorAll("nav button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
+  ["map", "forecast", "ebola", "accuracy", "method"].forEach(t => { $("tab-" + t).hidden = t !== name; });
+  hideTip();
+  if (name === "map") renderMap(true);
+  if (name === "forecast") renderForecast();
+  if (name === "ebola") renderEbola();
+  if (name === "accuracy") renderAccuracy();
+}
+document.querySelectorAll("nav button").forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
+let resizeTimer = null;
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (!$("tab-forecast").hidden) renderForecast(); if (!$("tab-ebola").hidden) renderEbola(); }, 120); });
+if (DATA) { initMap(); initForecast(); initEbola(); initAccuracy(); initMethod(); const h = location.hash.slice(1); showTab(["map", "forecast", "ebola", "accuracy", "method"].includes(h) ? h : "map"); }
+</script>
+</body>
+</html>

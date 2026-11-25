@@ -1,0 +1,21 @@
+outbreak_id,virus,country,admin1,place,place_precision,lat,lon,start,end,status,cases,deaths,case_note,source_ids,notes
+cod-2007-kasai,EBOV,COD,Kasai,Luebo and Mweka health zones,town (Luebo),-5.352,21.422,2007-09,2007-11,ended,264,187,,cdc_outbreak_history,Then Kasai-Occidental province
+cod-2008-kasai,EBOV,COD,Kasai,Mweka and Luebo health zones,town (Mweka),-4.852,21.560,2008-12,2009-02,ended,32,15,,cdc_outbreak_history,Then Kasai-Occidental province
+cod-2014-equateur,EBOV,COD,Tshuapa,Boende area,town (Boende),-0.282,20.881,2014-08,2014-11,ended,66,49,,cdc_outbreak_history,Then Equateur province
+cod-2017-likati,EBOV,COD,Bas-Uele,Likati health zone,province centroid,,,2017-05,2017-07,ended,8,4,,cdc_outbreak_history,
+cod-2018-equateur,EBOV,COD,Equateur,Bikoro region and Mbandaka,nearest large town (Mbandaka),0.049,18.260,2018-05,2018-07,ended,54,33,,cdc_outbreak_history,
+cod-2018-kivu,EBOV,COD,Nord-Kivu,"North Kivu, Ituri and South Kivu",epicentre town (Beni),0.491,29.473,2018-08-01,2020-06-25,ended,3470,2287,Includes four cases in Uganda linked to cross-border travel,cdc_outbreak_history,Largest outbreak in DRC before 2026
+cod-2020-equateur,EBOV,COD,Equateur,Mbandaka,town (Mbandaka),0.049,18.260,2020-06,2020-11,ended,130,55,,cdc_outbreak_history,
+cod-2021-biena,EBOV,COD,Nord-Kivu,Biena health zone,nearest large town (Butembo),0.142,29.291,2021-02,2021-05,ended,12,6,,cdc_outbreak_history,
+cod-2021-beni,EBOV,COD,Nord-Kivu,Beni health zone,town (Beni),0.491,29.473,2021-10,2021-12,ended,11,9,,cdc_outbreak_history,
+cod-2022-mbandaka,EBOV,COD,Equateur,Mbandaka,town (Mbandaka),0.049,18.260,2022-04,2022-07,ended,5,5,,cdc_outbreak_history,
+cod-2022-beni,EBOV,COD,Nord-Kivu,Beni health zone,town (Beni),0.491,29.473,2022-08,2022-09,ended,1,1,,cdc_outbreak_history,
+cod-2025-kasai,EBOV,COD,Kasai,Bulape health zone,nearest town in the same territory (Mweka),-4.852,21.560,2025-09-04,2025-12-01,ended,64,45,53 confirmed and 11 probable,who_afro_drc_2025_sitrep5;jgb_drc_2025;cdc_outbreak_history,16th Ebola outbreak in DRC
+uga-2011-luwero,SUDV,UGA,,Luwero district,town (Luwero),0.849,32.473,2011-05,2011-05,ended,1,1,,cdc_outbreak_history,
+uga-2012-kibaale,SUDV,UGA,,Kibaale district,town (Kibale),0.800,31.067,2012-06,2012,ended,11,4,,cdc_outbreak_history,End month not given by the source
+uga-2012-luwero,SUDV,UGA,,"Luwero, Jinja and Nakasongola districts",town (Luwero),0.849,32.473,2012-11,2013-01,ended,6,3,,cdc_outbreak_history,
+uga-2022-mubende,SUDV,UGA,,Mubende and eight other districts,town (Mubende),0.558,31.395,2022-09-20,2023-01-11,ended,164,77,142 confirmed and 22 probable cases; 55 confirmed and 22 probable deaths,who_don433;cdc_outbreak_history,CDC lists 55 deaths (confirmed only)
+uga-2025-kampala,SUDV,UGA,,Kampala,town (Kampala),0.316,32.582,2025-01-30,2025-04-26,ended,14,4,12 confirmed and 2 probable,who_don566;cdc_outbreak_history,
+uga-2007-bundibugyo,BDBV,UGA,,Bundibugyo district,town (Bundibugyo),0.711,30.065,2007,2008,ended,131,42,,cdc_outbreak_history,First recognised Bundibugyo virus outbreak; months not given by the source
+cod-2012-isiro,BDBV,COD,Haut-Uele,Isiro health zone,town (Isiro),2.774,27.616,2012,2012,ended,62,34,,cdc_outbreak_history,Then Orientale province; months not given by the source
+cod-2026-ituri,BDBV,COD,Ituri,"Ituri, Nord-Kivu, Haut-Uele and other provinces; cases also in Uganda, Kenya, France and Nigeria",epicentre town (Bunia),1.559,30.252,2026-05-15,,ongoing,,,Counts come from the live line list at run time,gh_bvd_linelist;gh_bvd_report;who_don602;who_afro_bvd_2026;ecdc_bvd_2026,17th Ebola disease outbreak in DRC; declared a public health emergency of international concern

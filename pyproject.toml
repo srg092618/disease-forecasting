@@ -1,0 +1,32 @@
+[project]
+name = "epicast"
+version = "0.2.0"
+description = "Probabilistic forecasting and mapping for malaria, HIV and Ebola disease, with rolling-origin evaluation."
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "scipy>=1.11",
+    "statsmodels>=0.14",
+    "scikit-learn>=1.4",
+    "requests>=2.32",
+    "shapely>=2.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["epicast*"]
+
+[tool.setuptools.package-data]
+epicast = ["reference/*.csv", "templates/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+filterwarnings = ["ignore::FutureWarning", "ignore::UserWarning"]

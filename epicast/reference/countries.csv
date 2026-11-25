@@ -1,0 +1,248 @@
+iso3,geo,name,region,income_group
+ABW,abw,Aruba,americas,high_income
+AFG,afg,Afghanistan,asia,low_income
+AGO,ago,Angola,africa,lower_middle_income
+AIA,aia,Anguilla,americas,
+ALA,ala,Åland,europe,
+ALB,alb,Albania,europe,upper_middle_income
+AND,and,Andorra,europe,high_income
+ARE,are,UAE,asia,high_income
+ARG,arg,Argentina,americas,upper_middle_income
+ARM,arm,Armenia,europe,upper_middle_income
+ASM,asm,American Samoa,asia,upper_middle_income
+ATA,ata,Antarctica,europe,
+ATG,atg,Antigua and Barbuda,americas,high_income
+AUS,aus,Australia,asia,high_income
+AUT,aut,Austria,europe,high_income
+AZE,aze,Azerbaijan,europe,upper_middle_income
+BDI,bdi,Burundi,africa,low_income
+BEL,bel,Belgium,europe,high_income
+BEN,ben,Benin,africa,low_income
+BFA,bfa,Burkina Faso,africa,low_income
+BGD,bgd,Bangladesh,asia,lower_middle_income
+BGR,bgr,Bulgaria,europe,upper_middle_income
+BHR,bhr,Bahrain,asia,high_income
+BHS,bhs,Bahamas,americas,high_income
+BIH,bih,Bosnia and Herzegovina,europe,upper_middle_income
+BLM,stbar,St. Barthélemy,americas,
+BLR,blr,Belarus,europe,upper_middle_income
+BLZ,blz,Belize,americas,upper_middle_income
+BMU,bmu,Bermuda,americas,high_income
+BOL,bol,Bolivia,americas,lower_middle_income
+BRA,bra,Brazil,americas,upper_middle_income
+BRB,brb,Barbados,americas,high_income
+BRN,brn,Brunei,asia,high_income
+BTN,btn,Bhutan,asia,lower_middle_income
+BVT,bouisl,Bouvet Island,africa,
+BWA,bwa,Botswana,africa,upper_middle_income
+CAF,caf,Central African Republic,africa,low_income
+CAN,can,Canada,americas,high_income
+CCK,cck,Cocos Island,asia,
+CHE,che,Switzerland,europe,high_income
+CHL,chl,Chile,americas,high_income
+CHN,chn,China,asia,upper_middle_income
+CIV,civ,Cote d'Ivoire,africa,lower_middle_income
+CMR,cmr,Cameroon,africa,lower_middle_income
+COD,cod,"Congo, Dem. Rep.",africa,low_income
+COG,cog,"Congo, Rep.",africa,lower_middle_income
+COK,cok,Cook Is,asia,
+COL,col,Colombia,americas,upper_middle_income
+COM,com,Comoros,africa,lower_middle_income
+CPV,cpv,Cape Verde,africa,lower_middle_income
+CRI,cri,Costa Rica,americas,upper_middle_income
+CUB,cub,Cuba,americas,upper_middle_income
+CUW,nld_curacao,Curaçao,americas,high_income
+CXR,cxr,Christmas Island,asia,
+CYM,cym,Cayman Islands,americas,high_income
+CYP,cyp,Cyprus,europe,high_income
+CZE,cze,Czech Republic,europe,high_income
+DEU,deu,Germany,europe,high_income
+DJI,dji,Djibouti,africa,lower_middle_income
+DMA,dma,Dominica,americas,upper_middle_income
+DNK,dnk,Denmark,europe,high_income
+DOM,dom,Dominican Republic,americas,upper_middle_income
+DZA,dza,Algeria,africa,upper_middle_income
+ECU,ecu,Ecuador,americas,upper_middle_income
+EGY,egy,Egypt,africa,lower_middle_income
+ERI,eri,Eritrea,africa,low_income
+ESH,esh,Western Sahara,africa,
+ESP,esp,Spain,europe,high_income
+EST,est,Estonia,europe,high_income
+ETH,eth,Ethiopia,africa,low_income
+FIN,fin,Finland,europe,high_income
+FJI,fji,Fiji,asia,upper_middle_income
+FLK,flk,Falkland Is (Malvinas),americas,
+FRA,fra,France,europe,high_income
+FRO,fro,Faeroe Islands,europe,high_income
+FSM,fsm,"Micronesia, Fed. Sts.",asia,lower_middle_income
+GAB,gab,Gabon,africa,upper_middle_income
+GBR,gbr,UK,europe,high_income
+GEO,geo,Georgia,europe,upper_middle_income
+GGY,gbg,Guernsey,europe,
+GHA,gha,Ghana,africa,lower_middle_income
+GIB,gib,Gibraltar,europe,high_income
+GIN,gin,Guinea,africa,low_income
+GLP,glp,Guadeloupe,americas,
+GMB,gmb,Gambia,africa,low_income
+GNB,gnb,Guinea-Bissau,africa,low_income
+GNQ,gnq,Equatorial Guinea,africa,upper_middle_income
+GRC,grc,Greece,europe,high_income
+GRD,grd,Grenada,americas,upper_middle_income
+GRL,grl,Greenland,europe,high_income
+GTM,gtm,Guatemala,americas,upper_middle_income
+GUF,guf,French Guiana,americas,
+GUM,gum,Guam,asia,high_income
+GUY,guy,Guyana,americas,upper_middle_income
+HKG,hkg,"Hong Kong, China",asia,high_income
+HMD,heard_a_mcd,Heard and McDonald Islands,asia,
+HND,hnd,Honduras,americas,lower_middle_income
+HRV,hrv,Croatia,europe,high_income
+HTI,hti,Haiti,americas,low_income
+HUN,hun,Hungary,europe,high_income
+IDN,idn,Indonesia,asia,lower_middle_income
+IMN,gbm,Isle of Man,europe,high_income
+IND,ind,India,asia,lower_middle_income
+IOT,iot,British Indian Ocean Territory,asia,
+IRL,irl,Ireland,europe,high_income
+IRN,irn,Iran,asia,upper_middle_income
+IRQ,irq,Iraq,asia,upper_middle_income
+ISL,isl,Iceland,europe,high_income
+ISR,isr,Israel,asia,high_income
+ITA,ita,Italy,europe,high_income
+JAM,jam,Jamaica,americas,upper_middle_income
+JEY,jey,Jersey,europe,
+JOR,jor,Jordan,asia,upper_middle_income
+JPN,jpn,Japan,asia,high_income
+KAZ,kaz,Kazakhstan,asia,upper_middle_income
+KEN,ken,Kenya,africa,lower_middle_income
+KGZ,kgz,Kyrgyz Republic,asia,lower_middle_income
+KHM,khm,Cambodia,asia,lower_middle_income
+KIR,kir,Kiribati,asia,lower_middle_income
+KNA,kna,St. Kitts and Nevis,americas,high_income
+KOR,kor,South Korea,asia,high_income
+KWT,kwt,Kuwait,asia,high_income
+LAO,lao,Lao,asia,lower_middle_income
+LBN,lbn,Lebanon,asia,upper_middle_income
+LBR,lbr,Liberia,africa,low_income
+LBY,lby,Libya,africa,upper_middle_income
+LCA,lca,St. Lucia,americas,upper_middle_income
+LIE,lie,Liechtenstein,europe,high_income
+LKA,lka,Sri Lanka,asia,upper_middle_income
+LSO,lso,Lesotho,africa,lower_middle_income
+LTU,ltu,Lithuania,europe,high_income
+LUX,lux,Luxembourg,europe,high_income
+LVA,lva,Latvia,europe,high_income
+MAC,mac,"Macao, China",asia,high_income
+MAF,maf,St. Martin (French part),americas,high_income
+MAR,mar,Morocco,africa,lower_middle_income
+MCO,mco,Monaco,europe,high_income
+MDA,mda,Moldova,europe,lower_middle_income
+MDG,mdg,Madagascar,africa,low_income
+MDV,mdv,Maldives,asia,upper_middle_income
+MEX,mex,Mexico,americas,upper_middle_income
+MHL,mhl,Marshall Islands,asia,upper_middle_income
+MKD,mkd,North Macedonia,europe,upper_middle_income
+MLI,mli,Mali,africa,low_income
+MLT,mlt,Malta,europe,high_income
+MMR,mmr,Myanmar,asia,lower_middle_income
+MNE,mne,Montenegro,europe,upper_middle_income
+MNG,mng,Mongolia,asia,lower_middle_income
+MNP,mnp,Northern Mariana Islands,asia,high_income
+MOZ,moz,Mozambique,africa,low_income
+MRT,mrt,Mauritania,africa,lower_middle_income
+MSR,msr,Montserrat,americas,
+MTQ,mtq,Martinique,americas,
+MUS,mus,Mauritius,africa,upper_middle_income
+MWI,mwi,Malawi,africa,low_income
+MYS,mys,Malaysia,asia,upper_middle_income
+MYT,myt,Mayotte,africa,
+NAM,nam,Namibia,africa,upper_middle_income
+NCL,ncl,New Caledonia,asia,high_income
+NER,ner,Niger,africa,low_income
+NFK,nfk,Norfolk Island,asia,
+NGA,nga,Nigeria,africa,lower_middle_income
+NIC,nic,Nicaragua,americas,lower_middle_income
+NIU,niu,Niue,asia,
+NLD,nld,Netherlands,europe,high_income
+NOR,nor,Norway,europe,high_income
+NPL,npl,Nepal,asia,low_income
+NRU,nru,Nauru,asia,upper_middle_income
+NZL,nzl,New Zealand,asia,high_income
+OMN,omn,Oman,asia,high_income
+PAK,pak,Pakistan,asia,lower_middle_income
+PAN,pan,Panama,americas,high_income
+PCN,pcn,Pitcairn,asia,
+PER,per,Peru,americas,upper_middle_income
+PHL,phl,Philippines,asia,lower_middle_income
+PLW,plw,Palau,asia,high_income
+PNG,png,Papua New Guinea,asia,lower_middle_income
+POL,pol,Poland,europe,high_income
+PRI,pri,Puerto Rico,americas,high_income
+PRK,prk,North Korea,asia,low_income
+PRT,prt,Portugal,europe,high_income
+PRY,pry,Paraguay,americas,upper_middle_income
+PSE,pse,Palestine,asia,lower_middle_income
+PYF,pyf,French Polynesia,asia,high_income
+QAT,qat,Qatar,asia,high_income
+REU,reu,Reunion,africa,
+ROU,rou,Romania,europe,upper_middle_income
+RUS,rus,Russia,europe,upper_middle_income
+RWA,rwa,Rwanda,africa,low_income
+SAU,sau,Saudi Arabia,asia,high_income
+SDN,sdn,Sudan,africa,lower_middle_income
+SEN,sen,Senegal,africa,lower_middle_income
+SGP,sgp,Singapore,asia,high_income
+SGS,sgero_a_ssandw,South Georgia and the South Sandwich Islands,americas,
+SHN,shn,St. Helena,africa,
+SJM,sjm,Svalbard,europe,
+SLB,slb,Solomon Islands,asia,lower_middle_income
+SLE,sle,Sierra Leone,africa,low_income
+SLV,slv,El Salvador,americas,lower_middle_income
+SMR,smr,San Marino,europe,high_income
+SOM,som,Somalia,africa,low_income
+SPM,spm,St.-Pierre-et-Miquelon,americas,
+SRB,srb,Serbia,europe,upper_middle_income
+SSD,ssd,South Sudan,africa,low_income
+STP,stp,Sao Tome and Principe,africa,lower_middle_income
+SUR,sur,Suriname,americas,upper_middle_income
+SVK,svk,Slovak Republic,europe,high_income
+SVN,svn,Slovenia,europe,high_income
+SWE,swe,Sweden,europe,high_income
+SWZ,swz,Eswatini,africa,lower_middle_income
+SXM,sxm,Sint Maarten (Dutch part),americas,high_income
+SYC,syc,Seychelles,africa,high_income
+SYR,syr,Syria,asia,low_income
+TCA,tca,Turks and Caicos Islands,americas,high_income
+TCD,tcd,Chad,africa,low_income
+TGO,tgo,Togo,africa,low_income
+THA,tha,Thailand,asia,upper_middle_income
+TJK,tjk,Tajikistan,asia,low_income
+TKL,tkl,Tokelau,asia,
+TKM,tkm,Turkmenistan,asia,upper_middle_income
+TLS,tls,Timor-Leste,asia,lower_middle_income
+TON,ton,Tonga,asia,upper_middle_income
+TTO,tto,Trinidad and Tobago,americas,high_income
+TUN,tun,Tunisia,africa,lower_middle_income
+TUR,tur,Turkey,europe,upper_middle_income
+TUV,tuv,Tuvalu,asia,upper_middle_income
+TWN,twn,Taiwan,asia,high_income
+TZA,tza,Tanzania,africa,low_income
+UGA,uga,Uganda,africa,low_income
+UKR,ukr,Ukraine,europe,lower_middle_income
+UMI,usa_minor_out_isl,US Minor Outlying Islands,americas,
+URY,ury,Uruguay,americas,high_income
+USA,usa,USA,americas,high_income
+UZB,uzb,Uzbekistan,asia,lower_middle_income
+VAT,hos,Holy See,europe,
+VCT,vct,St. Vincent and the Grenadines,americas,upper_middle_income
+VEN,ven,Venezuela,americas,upper_middle_income
+VGB,vgb,British Virgin Islands,americas,high_income
+VIR,vir,Virgin Islands (U.S.),americas,high_income
+VNM,vnm,Vietnam,asia,lower_middle_income
+VUT,vut,Vanuatu,asia,lower_middle_income
+WLF,wlf,Wallis et Futuna,asia,
+WSM,wsm,Samoa,asia,upper_middle_income
+YEM,yem,Yemen,asia,low_income
+ZAF,zaf,South Africa,africa,upper_middle_income
+ZMB,zmb,Zambia,africa,lower_middle_income
+ZWE,zwe,Zimbabwe,africa,lower_middle_income
